@@ -1,4 +1,4 @@
-name: Qt Cross Platform Build & Release
+name: macOS ARM64 Build & Release
 
 on:
   push:
@@ -11,37 +11,6 @@ jobs:
     strategy:
       matrix:
         include:
-          # Linux x86_64 - 使用 ubuntu-22.04
-          - os: ubuntu-22.04
-            qt_arch: gcc_64
-            platform_name: Linux-x64
-            arch_label: x86_64
-            build_dir: build-linux-x64
-            artifact_name: DrCOM-JLU-Linux-x64.tar.gz
-            is_linux: true
-
-          # Windows MinGW
-          - os: windows-latest
-            qt_arch: win64_mingw
-            compiler: mingw
-            platform_name: Windows-MinGW
-            arch_label: x86_64
-            build_dir: build-windows-mingw
-            artifact_name: DrCOM-JLU-Windows-MinGW.zip
-            is_windows: true
-            deploy_dir: deploy-windows-mingw
-
-          # Windows MSVC
-          - os: windows-latest
-            qt_arch: win64_msvc2019_64
-            compiler: msvc
-            platform_name: Windows-MSVC
-            arch_label: x86_64
-            build_dir: build-windows-msvc
-            artifact_name: DrCOM-JLU-Windows-MSVC.zip
-            is_windows: true
-            deploy_dir: deploy-windows-msvc
-
           # macOS Apple Silicon
           - os: macos-latest
             qt_arch: clang_64
