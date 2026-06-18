@@ -24,6 +24,7 @@ void InstallMacLiquidGlass(void *nativeView)
     window.backgroundColor = NSColor.clearColor;
     window.titlebarAppearsTransparent = YES;
 
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
     if (@available(macOS 26.0, *)) {
         if ([content isKindOfClass:NSGlassEffectView.class]) return;
         NSGlassEffectView *glass = [[NSGlassEffectView alloc] initWithFrame:content.bounds];
@@ -32,15 +33,17 @@ void InstallMacLiquidGlass(void *nativeView)
         glass.cornerRadius = 12.0;
         glass.contentView = content;
         window.contentView = glass;
-    } else {
-        NSVisualEffectView *material = [[NSVisualEffectView alloc] initWithFrame:content.bounds];
-        material.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-        material.material = NSVisualEffectMaterialUnderWindowBackground;
-        material.blendingMode = NSVisualEffectBlendingModeBehindWindow;
-        material.state = NSVisualEffectStateFollowsWindowActiveState;
-        window.contentView = material;
-        content.frame = material.bounds;
-        content.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-        [material addSubview:content];
+        return;
     }
+#endif
+
+    NSVisualEffectView *material = [[NSVisualEffectView alloc] initWithFrame:content.bounds];
+    material.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    material.material = NSVisualEffectMaterialUnderWindowBackground;
+    material.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+    material.state = NSVisualEffectStateFollowsWindowActiveState;
+    window.contentView = material;
+    content.frame = material.bounds;
+    content.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    [material addSubview:content];
 }
