@@ -1,6 +1,6 @@
 # JLU Link
 
-一款为吉林大学校园网设计的 macOS 认证客户端。基于 `drcom-jlu-qt` 重构，面向 Apple Silicon，重点改善原项目在现代 macOS 上的兼容性、界面体验和菜单栏驻留方式。 JLU/drcom/校园网
+一款为吉林大学校园网（jlu）设计的 macOS 认证客户端。基于 `drcom-jlu-qt` 重构，面向 Apple Silicon，重点改善原项目在现代 macOS 上的兼容性、界面体验和菜单栏驻留方式。
 
 > 非吉林大学官方软件。使用前请确认你有权接入所在网络，并遵守学校网络管理规定。
 
