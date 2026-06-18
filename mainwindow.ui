@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QDialog" name="MainWindow">
+  <property name="geometry"><rect><x>0</x><y>0</y><width>480</width><height>620</height></rect></property>
+  <property name="minimumSize"><size><width>450</width><height>590</height></size></property>
+  <property name="windowTitle"><string>JLU Link</string></property>
+  <property name="styleSheet">
+   <string notr="true">QDialog { background: #f6f8fb; color: #182230; }
+QLabel#titleLabel { font-size: 24px; font-weight: 700; color: #0b3566; }
+QLabel#subtitleLabel { font-size: 13px; color: #667085; }
+QLabel#sectionLabel, QLabel#preferencesLabel { font-size: 14px; font-weight: 650; color: #344054; }
+QLabel#connectionPreferencesLabel, QLabel#windowPreferencesLabel { font-size: 12px; font-weight: 600; color: #667085; }
+QLabel#fieldLabelAccount, QLabel#fieldLabelPassword, QLabel#fieldLabelMac { font-size: 12px; color: #475467; }
+QFrame#statusPanel { background: #ffffff; border: 1px solid #e1e7ef; border-radius: 8px; }
+QLabel#statusDot { background: #98a2b3; border-radius: 6px; min-width: 12px; max-width: 12px; min-height: 12px; max-height: 12px; }
+QLabel#labelStatus { font-size: 16px; font-weight: 650; color: #1d2939; }
+QLabel#labelStatusDetail, QLabel#labelIp { color: #667085; font-size: 12px; }
+QLineEdit { min-height: 40px; border: 1px solid #ccd5e1; border-radius: 7px; background: #ffffff; padding: 0 12px; selection-background-color: #0b6fd3; font-size: 14px; }
+QLineEdit:focus { border: 2px solid #287dcc; padding: 0 11px; }
+QLineEdit:disabled { background: #f0f3f7; color: #98a2b3; }
+QFrame#separator { background: #e4e9f0; min-height: 1px; max-height: 1px; }
+QCheckBox { spacing: 8px; color: #344054; min-height: 24px; }
+QCheckBox::indicator { width: 17px; height: 17px; }
+QPushButton#pushButtonLogin { min-height: 46px; border: 0; border-radius: 7px; background: #0b63b6; color: white; font-size: 15px; font-weight: 650; }
+QPushButton#pushButtonLogin:hover { background: #09589f; }
+QPushButton#pushButtonLogin:pressed { background: #084982; }
+QPushButton#pushButtonLogin:disabled { background: #a7bdd2; }
+QMenuBar { background: transparent; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="rootLayout">
+   <property name="leftMargin"><number>30</number></property><property name="topMargin"><number>18</number></property>
+   <property name="rightMargin"><number>30</number></property><property name="bottomMargin"><number>24</number></property>
+   <property name="spacing"><number>12</number></property>
+   <item><widget class="QMenuBar" name="menuBar"><property name="nativeMenuBar"><bool>true</bool></property></widget></item>
+   <item>
+    <layout class="QVBoxLayout" name="headerLayout"><property name="spacing"><number>2</number></property>
+     <item><widget class="QLabel" name="titleLabel"><property name="text"><string>JLU Link</string></property></widget></item>
+     <item><widget class="QLabel" name="subtitleLabel"><property name="text"><string>吉林大学校园网认证</string></property></widget></item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="statusPanel">
+     <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
+     <layout class="QHBoxLayout" name="statusLayout">
+      <property name="leftMargin"><number>18</number></property><property name="rightMargin"><number>18</number></property><property name="spacing"><number>12</number></property>
+      <item><widget class="QLabel" name="statusDot"><property name="text"><string/></property></widget></item>
+      <item>
+       <layout class="QVBoxLayout" name="statusTextLayout"><property name="spacing"><number>2</number></property>
+        <item><widget class="QLabel" name="labelStatus"><property name="text"><string>未连接</string></property></widget></item>
+        <item><widget class="QLabel" name="labelStatusDetail"><property name="text"><string>填写校园网账号后开始认证</string></property></widget></item>
+       </layout>
+      </item>
+      <item><spacer name="statusSpacer"><property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property><property name="sizeHint"><size><width>16</width><height>20</height></size></property></spacer></item>
+      <item><widget class="QLabel" name="labelIp"><property name="text"><string>IP：--</string></property><property name="alignment"><set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set></property></widget></item>
+     </layout>
+    </widget>
+   </item>
+   <item><widget class="QLabel" name="sectionLabel"><property name="text"><string>认证信息</string></property></widget></item>
+   <item>
+    <layout class="QVBoxLayout" name="fieldsLayout"><property name="spacing"><number>6</number></property>
+     <item><widget class="QLabel" name="fieldLabelAccount"><property name="text"><string>校园网账号</string></property></widget></item>
+     <item><widget class="QLineEdit" name="lineEditAccount"><property name="placeholderText"><string>请输入账号</string></property><property name="clearButtonEnabled"><bool>true</bool></property></widget></item>
+     <item><spacer name="accountSpacer"><property name="orientation"><enum>Qt::Orientation::Vertical</enum></property><property name="sizeHint"><size><width>20</width><height>4</height></size></property></spacer></item>
+     <item><widget class="QLabel" name="fieldLabelPassword"><property name="text"><string>密码</string></property></widget></item>
+     <item><widget class="QLineEdit" name="lineEditPass"><property name="placeholderText"><string>请输入密码</string></property><property name="echoMode"><enum>QLineEdit::EchoMode::Password</enum></property></widget></item>
+     <item><spacer name="passwordSpacer"><property name="orientation"><enum>Qt::Orientation::Vertical</enum></property><property name="sizeHint"><size><width>20</width><height>4</height></size></property></spacer></item>
+     <item><widget class="QLabel" name="fieldLabelMac"><property name="text"><string>MAC 地址</string></property></widget></item>
+     <item><widget class="QLineEdit" name="lineEditMAC"><property name="placeholderText"><string>1A:2B:3C:4D:5E:6F</string></property><property name="inputMask"><string>&gt;HH:HH:HH:HH:HH:HH;_</string></property></widget></item>
+    </layout>
+   </item>
+   <item><widget class="QFrame" name="separator"><property name="frameShape"><enum>QFrame::Shape::NoFrame</enum></property></widget></item>
+   <item><widget class="QLabel" name="preferencesLabel"><property name="text"><string>偏好设置</string></property></widget></item>
+   <item>
+    <layout class="QGridLayout" name="preferencesLayout"><property name="horizontalSpacing"><number>24</number></property><property name="verticalSpacing"><number>5</number></property>
+     <item row="0" column="0"><widget class="QLabel" name="connectionPreferencesLabel"><property name="text"><string>连接</string></property></widget></item>
+     <item row="0" column="1"><widget class="QLabel" name="windowPreferencesLabel"><property name="text"><string>窗口</string></property></widget></item>
+     <item row="1" column="0"><widget class="QCheckBox" name="checkBoxRemember"><property name="text"><string>保存登录信息</string></property><property name="toolTip"><string>在此 Mac 上保存账号和加密后的密码</string></property></widget></item>
+     <item row="2" column="0"><widget class="QCheckBox" name="checkBoxAutoLogin"><property name="text"><string>启动时自动连接</string></property><property name="toolTip"><string>打开应用后自动进行校园网认证</string></property></widget></item>
+     <item row="3" column="0"><widget class="QCheckBox" name="checkBoxAutoReconnect"><property name="text"><string>断线后自动重连</string></property><property name="toolTip"><string>连接意外中断后自动尝试恢复认证</string></property></widget></item>
+     <item row="1" column="1"><widget class="QCheckBox" name="checkBoxNotShowWelcome"><property name="text"><string>连接后不打开通知页</string></property><property name="toolTip"><string>认证成功后不打开校园网通知网页</string></property></widget></item>
+     <item row="2" column="1"><widget class="QCheckBox" name="checkBoxHideLoginWindow"><property name="text"><string>启动后仅驻留菜单栏</string></property><property name="toolTip"><string>启动时不显示主窗口，只显示菜单栏图标</string></property></widget></item>
+    </layout>
+   </item>
+   <item><spacer name="bottomSpacer"><property name="orientation"><enum>Qt::Orientation::Vertical</enum></property><property name="sizeHint"><size><width>20</width><height>8</height></size></property></spacer></item>
+   <item><widget class="QPushButton" name="pushButtonLogin"><property name="text"><string>连接校园网</string></property><property name="default"><bool>true</bool></property></widget></item>
+  </layout>
+ </widget>
+ <tabstops><tabstop>lineEditAccount</tabstop><tabstop>lineEditPass</tabstop><tabstop>lineEditMAC</tabstop><tabstop>checkBoxRemember</tabstop><tabstop>checkBoxAutoLogin</tabstop><tabstop>checkBoxAutoReconnect</tabstop><tabstop>checkBoxNotShowWelcome</tabstop><tabstop>checkBoxHideLoginWindow</tabstop><tabstop>pushButtonLogin</tabstop></tabstops>
+ <resources/><connections/>
+</ui>

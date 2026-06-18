@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/offline.png</file>
+        <file>images/online.png</file>
+        <file>images/AppIcon.png</file>
+        <file>images/eye.svg</file>
+        <file>images/eye-off.svg</file>
+        <file>images/tray-online.svg</file>
+        <file>images/tray-offline.svg</file>
+        <file>ts/DrCOM_zh_CN.qm</file>
+    </qresource>
+</RCC>

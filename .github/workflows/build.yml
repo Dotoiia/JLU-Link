@@ -1,0 +1,330 @@
+name: Qt Cross Platform Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          # Linux x86_64 - 使用 ubuntu-22.04
+          - os: ubuntu-22.04
+            qt_arch: gcc_64
+            platform_name: Linux-x64
+            arch_label: x86_64
+            build_dir: build-linux-x64
+            artifact_name: DrCOM-JLU-Linux-x64.tar.gz
+            is_linux: true
+
+          # Windows MinGW
+          - os: windows-latest
+            qt_arch: win64_mingw
+            compiler: mingw
+            platform_name: Windows-MinGW
+            arch_label: x86_64
+            build_dir: build-windows-mingw
+            artifact_name: DrCOM-JLU-Windows-MinGW.zip
+            is_windows: true
+            deploy_dir: deploy-windows-mingw
+
+          # Windows MSVC
+          - os: windows-latest
+            qt_arch: win64_msvc2019_64
+            compiler: msvc
+            platform_name: Windows-MSVC
+            arch_label: x86_64
+            build_dir: build-windows-msvc
+            artifact_name: DrCOM-JLU-Windows-MSVC.zip
+            is_windows: true
+            deploy_dir: deploy-windows-msvc
+
+          # macOS Apple Silicon
+          - os: macos-latest
+            qt_arch: clang_64
+            mac_arch: arm64
+            platform_name: macOS-AppleSilicon
+            arch_label: arm64
+            build_dir: build-macos-arm64
+            artifact_name: DrCOM-JLU-macOS-AppleSilicon.zip
+            is_macos: true
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.3'
+        arch: ${{ matrix.qt_arch }}
+        host: ${{ matrix.is_macos && 'mac' || matrix.is_windows && 'windows' || 'linux' }}
+        cache: true
+
+    - name: Setup MSYS2 for MinGW
+      if: matrix.compiler == 'mingw'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: mingw-w64-x86_64-make
+        update: true
+
+    - name: Setup MSVC Environment
+      if: matrix.compiler == 'msvc'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+        uwp: false
+        spectre: false
+
+    - name: Create Build Directory
+      shell: bash
+      run: |
+        mkdir -p "${{ matrix.build_dir }}"
+
+    - name: Configure (qmake)
+      shell: bash
+      working-directory: ${{ matrix.build_dir }}
+      run: |
+        if [ -n "${{ matrix.mac_arch }}" ]; then
+          qmake ../DrCOM_JLU_Qt.pro CONFIG-=debug CONFIG+=release "QMAKE_APPLE_DEVICE_ARCHS=${{ matrix.mac_arch }}"
+        else
+          qmake ../DrCOM_JLU_Qt.pro CONFIG-=debug CONFIG+=release
+        fi
+
+    - name: Build for MinGW and others
+      if: matrix.compiler != 'msvc'
+      shell: bash
+      working-directory: ${{ matrix.build_dir }}
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ] && [ "${{ matrix.compiler }}" == "mingw" ]; then
+          mingw32-make -j$(nproc)
+        else
+          make -j$(nproc)
+        fi
+
+    - name: Build for MSVC
+      if: matrix.compiler == 'msvc'
+      shell: cmd
+      working-directory: ${{ matrix.build_dir }}
+      run: |
+        nmake
+
+    - name: Verify Build Output
+      shell: bash
+      run: |
+        echo "=== 验证 ${{matrix.build_dir}} 目录 ==="
+        ls -la "${{ matrix.build_dir }}/"
+        
+        if [ "${{ matrix.is_macos }}" == "true" ]; then
+          if [ -d "${{ matrix.build_dir }}/DrCOM_JLU_Qt.app" ]; then
+            file "${{ matrix.build_dir }}/DrCOM_JLU_Qt.app/Contents/MacOS/DrCOM_JLU_Qt"
+            echo "找到 macOS 应用包"
+          else
+            echo "未找到 DrCOM_JLU_Qt.app"
+            exit 1
+          fi
+        elif [ "${{ matrix.is_linux }}" == "true" ]; then
+          if [ -f "${{ matrix.build_dir }}/DrCOM_JLU_Qt" ]; then
+            file "${{ matrix.build_dir }}/DrCOM_JLU_Qt"
+            echo "找到 Linux 可执行文件"
+            echo "检查依赖:"
+            ldd "${{ matrix.build_dir }}/DrCOM_JLU_Qt" 2>/dev/null || echo "ldd 检查失败"
+          else
+            echo "未找到 DrCOM_JLU_Qt"
+            exit 1
+          fi
+        elif [ "${{ matrix.is_windows }}" == "true" ]; then
+          echo "构建目录: ${{matrix.build_dir}}"
+          ls -la "${{ matrix.build_dir }}/"
+          
+          if [ -f "${{ matrix.build_dir }}/release/DrCOM_JLU_Qt.exe" ]; then
+            echo "找到 Windows 可执行文件 (在 release 目录)"
+            ls -la "${{ matrix.build_dir }}/release/DrCOM_JLU_Qt.exe"
+          elif [ -f "${{ matrix.build_dir }}/debug/DrCOM_JLU_Qt.exe" ]; then
+            echo "找到 Windows 可执行文件 (在 debug 目录)"
+            ls -la "${{ matrix.build_dir }}/debug/DrCOM_JLU_Qt.exe"
+          elif [ -f "${{ matrix.build_dir }}/DrCOM_JLU_Qt.exe" ]; then
+            echo "找到 Windows 可执行文件"
+            ls -la "${{ matrix.build_dir }}/DrCOM_JLU_Qt.exe"
+          else
+            echo "未找到 DrCOM_JLU_Qt.exe"
+            exit 1
+          fi
+        fi
+
+    - name: Deploy Windows Dependencies
+      if: matrix.is_windows
+      shell: bash
+      run: |
+        echo "部署 Windows 依赖"
+        
+        DEPLOY_DIR="${{ matrix.deploy_dir }}"
+        mkdir -p "$DEPLOY_DIR"
+        
+        EXE_PATH=""
+        if [ -f "${{ matrix.build_dir }}/release/DrCOM_JLU_Qt.exe" ]; then
+          EXE_PATH="${{ matrix.build_dir }}/release/DrCOM_JLU_Qt.exe"
+        elif [ -f "${{ matrix.build_dir }}/debug/DrCOM_JLU_Qt.exe" ]; then
+          EXE_PATH="${{ matrix.build_dir }}/debug/DrCOM_JLU_Qt.exe"
+        elif [ -f "${{ matrix.build_dir }}/DrCOM_JLU_Qt.exe" ]; then
+          EXE_PATH="${{ matrix.build_dir }}/DrCOM_JLU_Qt.exe"
+        else
+          EXE_PATH=$(find "${{ matrix.build_dir }}" -name "*.exe" -type f | head -1)
+        fi
+        
+        if [ -f "$EXE_PATH" ]; then
+          echo "找到可执行文件: $EXE_PATH"
+          cp "$EXE_PATH" "$DEPLOY_DIR/"
+        else
+          echo "未找到可执行文件"
+          exit 1
+        fi
+        
+        echo "运行 windeployqt..."
+        cd "$DEPLOY_DIR"
+        
+        EXE_FILE=$(find . -name "*.exe" -type f | head -1)
+        if [ -n "$EXE_FILE" ]; then
+          echo "为 $EXE_FILE 部署依赖..."
+          windeployqt --compiler-runtime --no-translations "$EXE_FILE"
+        else
+          echo "部署目录中未找到可执行文件"
+          exit 1
+        fi
+
+    - name: Deploy macOS Dependencies
+      if: matrix.is_macos
+      shell: bash
+      run: |
+        echo "部署 macOS 依赖"
+        
+        if [ -d "${{ matrix.build_dir }}/DrCOM_JLU_Qt.app" ]; then
+          APP_PATH="${{ matrix.build_dir }}/DrCOM_JLU_Qt.app"
+        else
+          APP_PATH=$(find "${{ matrix.build_dir }}" -name "*.app" -type d | head -1)
+        fi
+        
+        if [ -d "$APP_PATH" ]; then
+          echo "找到应用包: $APP_PATH"
+          macdeployqt "$APP_PATH" -always-overwrite
+        else
+          echo "未找到 .app 文件"
+          exit 1
+        fi
+
+    - name: Package Linux
+      if: matrix.is_linux
+      shell: bash
+      run: |
+        echo "=== 打包 Linux 构建目录 ==="
+        
+        if [ -f "${{ matrix.build_dir }}/DrCOM_JLU_Qt" ]; then
+          echo "创建发布包: ${{ matrix.artifact_name }}"
+          echo "打包内容:"
+          ls -la "${{ matrix.build_dir }}/"
+          
+          # 创建包含可执行文件的简单目录结构
+          mkdir -p release-linux
+          cp -r "${{ matrix.build_dir }}"/* release-linux/ 2>/dev/null || true
+          
+          # 打包整个目录
+          tar czvf "${{ matrix.artifact_name }}" -C release-linux .
+          
+          echo "✅ 打包完成"
+          ls -lh "${{ matrix.artifact_name }}"
+        else
+          echo "❌ 未找到 Linux 可执行文件"
+          exit 1
+        fi
+
+    - name: Package Windows
+      if: matrix.is_windows
+      shell: bash
+      run: |
+        echo "=== 打包 Windows 部署目录 ==="
+        
+        if [ -d "${{ matrix.deploy_dir }}" ]; then
+          echo "创建 Windows 发布包: ${{ matrix.artifact_name }}"
+          7z a "${{ matrix.artifact_name }}" "${{ matrix.deploy_dir }}/*"
+          
+          echo "✅ 打包完成"
+          ls -lh "${{ matrix.artifact_name }}"
+        else
+          echo "❌ 部署目录不存在"
+          exit 1
+        fi
+
+    - name: Package macOS
+      if: matrix.is_macos
+      shell: bash
+      run: |
+        echo "=== 打包 macOS 应用包 ==="
+        
+        if [ -d "${{ matrix.build_dir }}/DrCOM_JLU_Qt.app" ]; then
+          APP_PATH="${{ matrix.build_dir }}/DrCOM_JLU_Qt.app"
+        else
+          APP_PATH=$(find "${{ matrix.build_dir }}" -name "*.app" -type d | head -1)
+        fi
+        
+        if [ -d "$APP_PATH" ]; then
+          echo "创建 macOS 发布包: ${{ matrix.artifact_name }}"
+          ditto -c -k --keepParent "$APP_PATH" "${{ matrix.artifact_name }}"
+          
+          echo "✅ 打包完成"
+          ls -lh "${{ matrix.artifact_name }}"
+        else
+          echo "❌ 未找到应用包"
+          exit 1
+        fi
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ${{ matrix.artifact_name }}
+        retention-days: 1
+
+  release:
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+    
+    - name: Determine Release Name
+      id: determine-release
+      run: |
+        if [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "release_name=Release $TAG_NAME" >> $GITHUB_OUTPUT
+        else
+          TIMESTAMP=$(date -u +'%Y.%m.%d-%H%M%S')
+          echo "tag_name=manual-$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "release_name=Manual Build $TIMESTAMP" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.determine-release.outputs.tag_name }}
+        name: ${{ steps.determine-release.outputs.release_name }}
+        draft: false
+        prerelease: ${{ github.event_name == 'workflow_dispatch' }}
+        generate_release_notes: true
+        files: |
+          ./artifacts/**/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
